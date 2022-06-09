@@ -4,7 +4,7 @@ from scipy import stats
 import seaborn as sns
 
 # load and inspect data
-dataset = pd.read_csv('C:/ML/Housing Prices Competition/train.csv')
+dataset = pd.read_csv('C:/ML/Housing_Prices_Competition/train.csv')
 
 dataset.head()
 
@@ -24,6 +24,28 @@ heatmap.set_title('Features Correlating with SalePrice', fontdict={'fontsize':18
 # inspect if our choosen feature has no NA
 
 dataset['OverallQual'].isna().sum()
+
+# explore our feature for ourliers and distribution
+fig, ax = plt.subplots(1, 2, figsize=(10, 6))
+plt.subplots_adjust(wspace=0.5) 
+
+boxplot = dataset.boxplot(['OverallQual'],ax=ax[0], color='blue',)
+ax[0].set_xlabel('OverallQual')
+sns.histplot(dataset['OverallQual'],ax=ax[1], color='g',)
+ax[1].set_xlabel('OverallQual')
+
+# we can replace outliers with na, and na replace with mean(mode)
+
+x_percentile = dataset['OverallQual']
+
+q75,q25 = np.percentile(x_percentile,[75,25])
+intr_qr = q75-q25
+
+max = q75+(1.5*intr_qr)
+min = q25-(1.5*intr_qr)
+
+x_percentile[x_percentile < min] = np.nan # .cout - to count how many
+x_percentile[x_percentile > max] = np.nan
 
 
 # vizualise our x and y

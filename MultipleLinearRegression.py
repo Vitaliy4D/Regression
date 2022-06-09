@@ -60,6 +60,46 @@ col_corr_names= col_corr.index[1:].tolist()
     
 print(col_corr_names)
 
+# explore data for outliers with boxplot
+fig, ax = plt.subplots(1, 4, figsize=(10, 6))
+plt.subplots_adjust(wspace=0.5) 
+
+boxplot = dataset.boxplot(['OverallQual'],ax=ax[0], color='brown',)
+ax[0].set_xlabel('OverallQual')
+boxplot = dataset.boxplot(['GrLivArea'],ax=ax[1], color='g',)
+ax[1].set_xlabel('OverallQual')
+boxplot = dataset.boxplot(['GarageCars'],ax=ax[2], color='y',)
+ax[2].set_xlabel('OverallQual')
+boxplot = dataset.boxplot(['GarageArea'],ax=ax[3],)
+ax[3].set_xlabel('OverallQual')
+
+# alternative for box plot, to iterate 
+# create boxplot with a different y scale for different rows
+selection = ['OverallQual', 'GrLivArea', 'GarageCars', 'GarageArea', 'TotalBsmtSF', '1stFlrSF']
+fig, axes = plt.subplots(1, len(selection),figsize=(10, 6))
+plt.subplots_adjust(wspace=1) 
+for i, col in enumerate(selection):
+    ax = sns.boxplot(y=dataset[col], ax=axes.flatten()[i])
+    ax.set_ylim(dataset[col].min(), dataset[col].max())
+    ax.set_ylabel(col + ' / Unit')
+plt.show()
+
+# let us see how many outliers are in our data
+# count how many outliers in our features
+for x in dataset[col_corr_names]:
+    q75,q25 = np.percentile(dataset[col_corr_names].loc[:,x],[75,25])
+    intr_qr = q75-q25
+ 
+    max = q75+(1.5*intr_qr)
+    min = q25-(1.5*intr_qr)
+ 
+    print(x,dataset[col_corr_names].loc[dataset[col_corr_names][x] < min,x].count())
+    print(x,dataset[col_corr_names].loc[dataset[col_corr_names][x] > max,x].count())
+
+# in this case removing outliers and replacing it with mean did not improved our model
+# it made our model overfitted
+# to replace outliers change code above '.count' to '= np.nan'
+
 # inspect the data of choosen correlated columns
 pd.set_option('display.max_columns', None)
 dataset[col_corr_names].head()
@@ -141,7 +181,7 @@ from operator import itemgetter
 
 print("Intercept: ", mlr.intercept_)
 print("Coefficients:")
-list(sorted(zip(fin_corr_list, mlr.coef_),key=itemgetter(1),reverse=True))
+list(sorted(zip(X_t, mlr.coef_),key=itemgetter(1),reverse=True))
 
 #Prediction of test set
 y_pred_mlr= mlr.predict(x_test)
@@ -160,8 +200,8 @@ from sklearn import metrics
 meanAbErr = metrics.mean_absolute_error(y_test, y_pred_mlr)
 meanSqErr = metrics.mean_squared_error(y_test, y_pred_mlr)
 rootMeanSqErr = np.sqrt(metrics.mean_squared_error(y_test, y_pred_mlr))
-print('R squared trai: {:.2f}'.format(mlr.score(X_t, y_t)*100))
-print('R squared: {:.2f}'.format(mlr.score(x_test, y_test)*100))
+print('R squared train: {:.2f}'.format(mlr.score(X_t, y_t)*100))
+print('R squared test: {:.2f}'.format(mlr.score(x_test, y_test)*100))
 print('Mean Absolute Error:', meanAbErr)
 print('Mean Square Error:', meanSqErr)
 print('Root Mean Square Error:', rootMeanSqErr)
